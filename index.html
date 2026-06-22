@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">우리아기 성장/육아 안내페이지 👶</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f0f7ff;
+            scroll-behavior: smooth;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #2563eb, #0ea5e9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        /* Custom Scrollbar for inner cards if content is long */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 p-4 md:p-8">
+
+    <!-- 1. 초기 정보 입력 화면 (파라미터가 없을 때 노출) -->
+    <div id="setup-screen" class="max-w-md mx-auto mt-10 glass-card p-8 relative overflow-hidden hidden">
+        <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-200 rounded-full mix-blend-multiply filter blur-2xl opacity-50"></div>
+        <div class="text-center mb-8 relative z-10">
+            <h1 class="text-3xl font-black text-slate-800 mb-2">대시보드 만들기 👶</h1>
+            <p class="text-slate-500 text-sm">아기 이름과 생일을 입력하여<br>전용 육아 대시보드 URL을 생성하세요.</p>
+        </div>
+        
+        <form id="setup-form" onsubmit="generateDashboard(event)" class="space-y-5 relative z-10">
+            <div>
+                <label for="input-name" class="block text-sm font-bold text-slate-700 mb-1">아기 이름 (또는 태명)</label>
+                <input type="text" id="input-name" required placeholder="예: 빠망이" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+            </div>
+            <div>
+                <label for="input-birth" class="block text-sm font-bold text-slate-700 mb-1">아기 생일 (또는 출산예정일)</label>
+                <input type="date" id="input-birth" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-slate-700">
+            </div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl transition-colors shadow-lg shadow-blue-200 mt-4">
+                전용 대시보드 생성하기
+            </button>
+        </form>
+    </div>
+
+    <!-- 2. 메인 대시보드 (파라미터가 있을 때 노출) -->
+    <div class="max-w-7xl mx-auto space-y-6 hidden" id="dashboard-container">
+        
+        <!-- Header Section -->
+        <header class="glass-card p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-pulse"></div>
+            
+            <div class="z-10 text-center md:text-left">
+                <p class="text-sm md:text-base text-blue-600 font-semibold mb-1" id="current-date-display">로딩 중...</p>
+                <h1 class="text-3xl md:text-4xl font-black text-slate-800 mb-2" id="main-title">
+                    아기 성장 대시보드 <span class="text-2xl">👶</span>
+                </h1>
+                <p class="text-slate-500 font-medium text-sm md:text-base" id="birth-subtitle">
+                    생일: -
+                </p>
+            </div>
+
+            <div class="z-10 flex flex-col items-center justify-center bg-blue-50/80 border border-blue-100 rounded-2xl p-6 min-w-[200px]">
+                <p class="text-slate-500 text-sm font-semibold mb-1">오늘은</p>
+                <div class="flex items-baseline gap-1">
+                    <span class="text-sm font-bold text-blue-600">생후</span>
+                    <span class="text-5xl font-black gradient-text" id="days-old">0</span>
+                    <span class="text-lg font-bold text-blue-600">일차</span>
+                </div>
+                <div class="mt-2 text-sm font-medium text-slate-600 bg-white px-3 py-1 rounded-full shadow-sm">
+                    <span id="weeks-old">0</span>주차 / 만 <span id="months-old">0</span>개월
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="main-content-grid">
+
+            <!-- 1. Growth Info -->
+            <div class="glass-card p-6 flex flex-col h-full">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-indigo-100 p-3 rounded-full text-indigo-600 text-xl">⚖️</div>
+                    <h2 class="text-xl font-bold text-slate-800">이번 주 평균 성장</h2>
+                </div>
+                <p class="text-xs text-slate-400 mb-4">* 질병관리청 남아 표준 성장도표 기준</p>
+                
+                <div class="space-y-4 flex-grow">
+                    <div class="bg-indigo-50 rounded-xl p-4 flex justify-between items-center">
+                        <span class="font-semibold text-slate-600">평균 체중</span>
+                        <span class="text-2xl font-bold text-indigo-700" id="avg-weight">- kg</span>
+                    </div>
+                    <div class="bg-indigo-50 rounded-xl p-4 flex justify-between items-center">
+                        <span class="font-semibold text-slate-600">평균 신장</span>
+                        <span class="text-2xl font-bold text-indigo-700" id="avg-height">- cm</span>
+                    </div>
+                </div>
+                <div class="mt-4 text-sm text-indigo-600 bg-indigo-50/50 p-3 rounded-lg border border-indigo-100 flex gap-2 items-start">
+                    <span>💡</span>
+                    <span id="growth-tip">성장 팁을 불러오는 중입니다.</span>
+                </div>
+            </div>
+
+            <!-- 2. Feeding Guide -->
+            <div class="glass-card p-6 flex flex-col h-full">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-emerald-100 p-3 rounded-full text-emerald-600 text-xl">🍼</div>
+                    <h2 class="text-xl font-bold text-slate-800">수유 및 식단 가이드</h2>
+                </div>
+                <p class="text-xs text-slate-400 mb-4">* 혼합/분유 수유 기준 (모유는 아기가 원할 때마다 충분히)</p>
+
+                <div class="grid grid-cols-2 gap-4 flex-grow">
+                    <div class="bg-emerald-50 rounded-xl p-4 text-center flex flex-col justify-center">
+                        <p class="text-xs font-semibold text-slate-500 mb-1">1회 수유량</p>
+                        <p class="text-lg font-bold text-emerald-700" id="feed-amount">- ml</p>
+                    </div>
+                    <div class="bg-emerald-50 rounded-xl p-4 text-center flex flex-col justify-center">
+                        <p class="text-xs font-semibold text-slate-500 mb-1">하루 횟수</p>
+                        <p class="text-lg font-bold text-emerald-700" id="feed-times">- 회</p>
+                    </div>
+                    <div class="bg-emerald-50 rounded-xl p-4 text-center col-span-2 flex flex-col justify-center">
+                        <p class="text-xs font-semibold text-slate-500 mb-1">하루 총 수유(권장)량</p>
+                        <p class="text-xl font-black text-emerald-700" id="feed-max">- ml <span class="text-sm font-medium text-emerald-600">내외</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Sleep Guide -->
+            <div class="glass-card p-6 flex flex-col h-full">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-purple-100 p-3 rounded-full text-purple-600 text-xl">💤</div>
+                    <h2 class="text-xl font-bold text-slate-800">수면 가이드</h2>
+                </div>
+                <p class="text-xs text-slate-400 mb-4">* 아기마다 수면 패턴은 조금씩 다를 수 있습니다.</p>
+
+                <div class="bg-purple-50 rounded-xl p-6 flex-grow flex flex-col justify-center items-center border border-purple-100">
+                    <p class="text-sm font-semibold text-slate-500 mb-2">권장 하루 총 수면시간</p>
+                    <p class="text-4xl font-black text-purple-700 mb-4" id="sleep-total">- 시간</p>
+                    <div class="w-full bg-white p-3 rounded-lg text-sm text-purple-800 text-center font-medium shadow-sm leading-relaxed" id="sleep-pattern">
+                        수면 패턴 설명
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Psychological Development -->
+            <div class="glass-card p-6 md:col-span-2 lg:col-span-1 flex flex-col h-full">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-teal-100 p-3 rounded-full text-teal-600 text-xl">🧠</div>
+                    <h2 class="text-xl font-bold text-slate-800">심리·인지 발달</h2>
+                </div>
+                <p class="text-xs text-slate-400 mb-4">* 정신분석 및 발달심리학 전문가 기반 데이터</p>
+                
+                <div class="space-y-3 flex-grow custom-scrollbar overflow-y-auto pr-2">
+                    <div class="bg-teal-50/80 rounded-xl p-4 border border-teal-100">
+                        <h3 class="text-sm font-bold text-teal-800 mb-1 flex items-center gap-1">🛋️ 프로이트 (Freud)</h3>
+                        <p class="text-sm text-slate-600" id="psycho-freud">-</p>
+                    </div>
+                    <div class="bg-cyan-50/80 rounded-xl p-4 border border-cyan-100">
+                        <h3 class="text-sm font-bold text-cyan-800 mb-1 flex items-center gap-1">🤝 에릭슨 (Erikson)</h3>
+                        <p class="text-sm text-slate-600" id="psycho-erikson">-</p>
+                    </div>
+                    <div class="bg-sky-50/80 rounded-xl p-4 border border-sky-100">
+                        <h3 class="text-sm font-bold text-sky-800 mb-1 flex items-center gap-1">🧩 피아제 (Piaget)</h3>
+                        <p class="text-sm text-slate-600" id="psycho-piaget">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Development & Play -->
+            <div class="glass-card p-6 md:col-span-1 lg:col-span-1 flex flex-col h-full">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-amber-100 p-3 rounded-full text-amber-600 text-xl">🎨</div>
+                    <h2 class="text-xl font-bold text-slate-800">신체 발달 및 놀이</h2>
+                </div>
+                
+                <div class="bg-amber-50 rounded-xl p-5 flex-grow border border-amber-100 custom-scrollbar overflow-y-auto">
+                    <ul class="space-y-4 text-sm text-slate-700" id="dev-list">
+                        <!-- JS Injection -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 6. Care Tips -->
+            <div class="glass-card p-6 md:col-span-1 lg:col-span-1 flex flex-col h-full">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-rose-100 p-3 rounded-full text-rose-600 text-xl">🩺</div>
+                    <h2 class="text-xl font-bold text-slate-800">전문의 핵심 육아 팁</h2>
+                </div>
+                
+                <div class="bg-rose-50/80 rounded-xl p-5 flex-grow border border-rose-100 flex flex-col custom-scrollbar overflow-y-auto">
+                    <div class="text-sm text-slate-700 leading-relaxed font-medium space-y-3" id="care-tips">
+                        <!-- JS Injection -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. 예방접종 D-Day 캘린더 -->
+            <div class="glass-card p-6 md:col-span-2 lg:col-span-2 flex flex-col h-full">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-blue-100 p-3 rounded-full text-blue-600 text-xl">💉</div>
+                    <h2 class="text-xl font-bold text-slate-800">예방접종 D-Day 캘린더</h2>
+                </div>
+                <p class="text-xs text-slate-400 mb-4">* 질병관리청 표준 일정표 기준 (접종 당일 아기 컨디션에 따라 조절하세요)</p>
+                <div class="space-y-3 flex-grow custom-scrollbar overflow-y-auto pr-2" id="vaccine-list">
+                    <!-- JS Injection -->
+                </div>
+            </div>
+
+            <!-- 8. 응급상황 & 핫라인 -->
+            <div class="glass-card p-6 md:col-span-1 lg:col-span-1 flex flex-col h-full border border-red-200 bg-red-50/20 relative overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-red-200 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
+                <div class="flex items-center gap-3 mb-4 z-10">
+                    <div class="bg-red-100 p-3 rounded-full text-red-600 text-xl">🚨</div>
+                    <h2 class="text-xl font-bold text-slate-800">건강·응급 핫라인</h2>
+                </div>
+                <p class="text-xs text-red-500 font-semibold mb-4 z-10">야간/휴일에 아플 때 당황하지 마세요!</p>
+                
+                <div class="flex-grow space-y-4 custom-scrollbar overflow-y-auto pr-2 z-10">
+                    <div class="bg-white rounded-xl p-4 border border-red-100 shadow-sm">
+                        <h3 class="text-sm font-bold text-red-600 flex justify-between items-center mb-2">
+                            <span>🌙 전주 달빛어린이병원</span>
+                            <span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full">야간·휴일 소아진료</span>
+                        </h3>
+                        <ul class="text-xs text-slate-600 space-y-2 font-medium">
+                            <li class="flex flex-col">
+                                <span class="text-slate-800">대자인병원 (우아동3가)</span>
+                                <span>📞 063-240-2000</span>
+                            </li>
+                            <li class="flex flex-col border-t border-slate-100 pt-2">
+                                <span class="text-slate-800">전주다솔아동병원 (효자동2가)</span>
+                                <span>📞 063-280-0800</span>
+                            </li>
+                            <li class="flex flex-col border-t border-slate-100 pt-2">
+                                <span class="text-slate-800">올키즈365소아청소년과 (송천동2가)</span>
+                                <span>📞 063-715-1365</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-4 border border-red-100 shadow-sm">
+                        <h3 class="text-sm font-bold text-orange-600 mb-2">🚑 정읍/진안 지역 응급실</h3>
+                        <ul class="text-xs text-slate-600 space-y-2 font-medium">
+                            <li class="flex flex-col">
+                                <span class="text-slate-800">정읍아산병원 응급센터</span>
+                                <a href="tel:063-530-6129" class="hover:text-blue-500 transition-colors">📞 063-530-6129</a>
+                            </li>
+                            <li class="flex flex-col border-t border-slate-100 pt-2">
+                                <span class="text-slate-800">진안군의료원 응급실</span>
+                                <a href="tel:063-430-7119" class="hover:text-blue-500 transition-colors">📞 063-430-7119</a>
+                            </li>
+                            <li class="text-[10px] text-orange-500 mt-2 leading-relaxed bg-orange-50 p-2 rounded border border-orange-100">
+                                * 정읍/진안 야간 응급실은 소아전문의가 부재할 수 있으니 출발 전 진료 가능 여부를 꼭 전화로 먼저 확인하세요.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <a href="tel:119" class="flex-1 bg-red-600 hover:bg-red-700 text-white text-center py-2.5 rounded-lg font-bold text-sm transition-colors shadow-md">
+                            119 구급대
+                        </a>
+                        <a href="tel:129" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white text-center py-2.5 rounded-lg font-bold text-sm transition-colors shadow-md">
+                            129 보건상담
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 9. 이유식 식재료 사전 -->
+        <div class="glass-card p-6 md:p-8 transition-opacity duration-500" id="food-guide-section">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="bg-orange-100 p-3 rounded-full text-orange-600 text-xl">🥣</div>
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800">이유식 식재료 사전</h2>
+                    <p class="text-xs text-slate-500 mt-1">최신 소아과학회 지침(알레르기 조기 노출) 반영</p>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <!-- 돌 전 절대 금지 (365일 전까지 노출) -->
+                <div id="banned-foods-wrapper" class="bg-red-50 border border-red-100 rounded-xl p-5 relative overflow-hidden transition-all duration-300">
+                    <div class="absolute -right-6 -top-6 text-red-100 opacity-50 text-6xl">🚫</div>
+                    <h3 class="text-sm font-bold text-red-600 mb-3 flex items-center gap-2">🚫 돌 전 절대 금지 식재료 (생후 12개월 미만)</h3>
+                    <div class="flex flex-wrap gap-2" id="banned-foods">
+                        <span class="inline-flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1.5 rounded-full text-sm font-bold shadow-sm">🍯 벌꿀 <span class="font-normal text-xs">(보툴리누스균 마비 위험)</span></span>
+                        <span class="inline-flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1.5 rounded-full text-sm font-bold shadow-sm">🥛 생우유 <span class="font-normal text-xs">(장 출혈/알레르기 위험)</span></span>
+                        <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-3 py-1.5 rounded-full text-sm font-bold shadow-sm">🥝 키위 <span class="font-normal text-xs">(알레르기 유발률 높음)</span></span>
+                        <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-3 py-1.5 rounded-full text-sm font-bold shadow-sm">🍑 복숭아 <span class="font-normal text-xs">(알레르기 유발률 높음)</span></span>
+                    </div>
+                    <p class="text-xs text-red-500 mt-3 font-medium leading-relaxed">※ 벌꿀은 아주 적은 양도 영아 보툴리누스증이라는 치명적인 마비를 일으킬 수 있으니 빵이나 과자 성분표도 주의하세요.</p>
+                </div>
+
+                <!-- 시도 가능한 식재료 (동적 변경) -->
+                <div class="bg-emerald-50/50 border border-emerald-100 rounded-xl p-5">
+                    <h3 class="text-sm font-bold text-emerald-700 mb-3 flex items-center gap-2">🥕 현재 개월 수에 시도해 볼 수 있는 식재료</h3>
+                    <div class="flex flex-wrap gap-2" id="allowed-foods">
+                        <!-- JS Injection -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 수유 백과사전 (0~6개월 전용) -->
+        <div id="feeding-encyclopedia" class="glass-card p-6 md:p-8 transition-opacity duration-500 hidden">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-100 p-3 rounded-full text-blue-600 text-xl">📖</div>
+                    <h2 class="text-xl font-bold text-slate-800">우리아이 수유 백과사전</h2>
+                </div>
+                <span class="text-xs font-bold bg-blue-100 text-blue-600 px-3 py-1 rounded-full hidden md:inline-block">생후 6개월 전용 가이드</span>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- 올바른 수유법 -->
+                <details class="group bg-blue-50/50 rounded-xl border border-blue-100">
+                    <summary class="flex justify-between items-center font-semibold cursor-pointer list-none p-5 text-slate-800 transition-colors hover:bg-blue-50/80 rounded-xl">
+                        <span class="flex items-center gap-2">🍼 올바른 수유법 (모유 / 분유 / 혼합)</span>
+                        <span class="transition-transform duration-300 group-open:rotate-180 text-blue-500">
+                            <svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                        </span>
+                    </summary>
+                    <div class="text-slate-700 p-5 pt-0 text-sm space-y-5 border-t border-blue-100 mt-2">
+                        <p class="font-medium text-blue-800 bg-blue-100/50 p-3 rounded-lg leading-relaxed">
+                            💡 수유량과 수유텀에 하나의 정답은 없어요. 아기와 양육자가 서로 맞춰가며 조절하는 것이 가장 좋답니다. 너무 과도하게 많이 먹이거나 필요한 영양이 결핍될 만큼 적게 먹는 게 아니라면 괜찮아요.
+                        </p>
+                        
+                        <div class="grid md:grid-cols-3 gap-6">
+                            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                                <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">👩‍🍼 모유수유</h4>
+                                <ul class="list-disc list-inside space-y-2 text-slate-600">
+                                    <li>정확한 수유량을 측정하기 어려워 젖 물리는 시간을 체크해요.</li>
+                                    <li>한 번에 10~15분씩 양쪽을 물려요.</li>
+                                    <li>아이가 배고파할 때마다 먹여요.</li>
+                                    <li>유두 혼란 방지를 위해 젖병/노리개 젖꼭지를 초기엔 피해요.</li>
+                                    <li>수유 전 손과 가슴을 청결하게 유지해요.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                                <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">🍼 분유수유</h4>
+                                <ul class="list-disc list-inside space-y-2 text-slate-600">
+                                    <li>분유 물은 꼭 끓인 물 또는 정수(생수)로 타요.</li>
+                                    <li>먹다 남긴 분유는 반드시 버려요.</li>
+                                    <li>분유는 먹기 직전에 타요.</li>
+                                    <li>젖병과 젖꼭지를 아기에게 맞는 걸로 선택해요.</li>
+                                    <li>아기의 몸무게와 개월 수를 고려해서 먹여요.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                                <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">⚖️ 혼합수유</h4>
+                                <ul class="list-disc list-inside space-y-2 text-slate-600">
+                                    <li>모유를 먼저 먹이고 부족한 양만큼 분유를 보충해서 먹여요.</li>
+                                    <li>엄마의 상황에 맞춰 비율 조절해 나갑니다.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- 자주 묻는 질문 FAQ -->
+                <details class="group bg-blue-50/50 rounded-xl border border-blue-100">
+                    <summary class="flex justify-between items-center font-semibold cursor-pointer list-none p-5 text-slate-800 transition-colors hover:bg-blue-50/80 rounded-xl">
+                        <span class="flex items-center gap-2">💬 수유, 자주 묻는 질문 (FAQ)</span>
+                        <span class="transition-transform duration-300 group-open:rotate-180 text-blue-500">
+                            <svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                        </span>
+                    </summary>
+                    <div class="text-slate-700 p-5 pt-0 text-sm space-y-4 border-t border-blue-100 mt-2">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-100">
+                                <p class="font-bold text-blue-600 mb-2">Q. 수유텀, 먹기 시작한 시간부터? 다 먹은 시간부터?</p>
+                                <p class="leading-relaxed">정답은 없지만 보통 <span class="font-semibold text-slate-800">먹기 시작한 시간부터 계산</span>해요. 예: 수유텀이 3시간이고 2시에 시작해 2시 30분에 끝났더라도, 3시간 뒤인 5시에 먹여요.</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-100">
+                                <p class="font-bold text-blue-600 mb-2">Q. 먹이고 난 뒤 꼭 트름을 시켜줘야 할까요?</p>
+                                <p class="leading-relaxed">아기는 소화기관이 미성숙해 최소 생후 6개월까지는 수유 후 10~15분 정도 세워 안아 트름시켜 주세요. 바로 잠들었다면 옆으로 자세를 돌려주거나 안아 토닥여주세요.</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-100">
+                                <p class="font-bold text-blue-600 mb-2">Q. 아기가 게워낼 경우 다시 먹여야 하나요?</p>
+                                <p class="leading-relaxed">바로 또 먹이면 다시 게워낼 수 있어 <span class="font-semibold text-slate-800">다음 텀까지 기다렸다가 하는 게 좋아요.</span> 배고파한다면 최소 30분은 토닥이며 기다렸다 먹여주세요.</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-100">
+                                <p class="font-bold text-blue-600 mb-2">Q. 막수 후 통잠 자는 아기, 깨워서 먹어야 할까요?</p>
+                                <p class="leading-relaxed">0~1개월 신생아 시기를 제외하고 잘 잔다면 굳이 깨워서 먹일 필요 없어요. 2개월부터는 새벽 수유 습관을 줄이고, 1회 수유량을 조금 늘려 전체 밸런스만 맞춰주세요.</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-100">
+                                <p class="font-bold text-blue-600 mb-2">Q. 밤수는 언제까지 해줘야 할까요?</p>
+                                <p class="leading-relaxed"><span class="font-semibold text-slate-800">생후 6개월</span>이 되면 본격적으로 끊어야 해요. 이유식 진행과 성장호르몬 분비를 위해 밤에 줄어든 양만큼 낮에 보충해주세요.</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-100">
+                                <p class="font-bold text-blue-600 mb-2">Q. 너무 적게 & 많이 먹는 것 같아요.</p>
+                                <p class="leading-relaxed">많이 먹는다면 최소 수유량을 정해 분배하고, 너무 적게 먹는다면 수면 상태나 수유 자세 등 원인을 찾아 조급해하지 말고 차근차근 맞춰나가세요.</p>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        <!-- 10. Eyesight Simulation -->
+        <div class="glass-card p-6 md:p-8 transition-opacity duration-500">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-100 p-3 rounded-full text-indigo-600 text-xl">👀</div>
+                    <h2 class="text-xl font-bold text-slate-800">아이의 시야 시뮬레이션</h2>
+                </div>
+                <span class="text-xs font-bold bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full hidden md:inline-block" id="eyesight-badge">현재 개월 수</span>
+            </div>
+            <p class="text-sm text-slate-600 mb-6">신생아는 흑백으로 희미하게 보이다가, 서서히 색채와 형태를 뚜렷하게 구분하게 됩니다. 슬라이더를 움직여 개월 수에 따른 시력 발달 과정을 확인해 보세요.</p>
+
+            <div class="relative w-full overflow-hidden rounded-xl bg-slate-200 shadow-inner border border-slate-200/50 flex items-center justify-center" style="aspect-ratio: 943 / 627;">
+                <img id="eyesight-image" src="eyesights/m0.jpg" alt="개월수별 시야 시뮬레이션" class="object-cover w-full h-full transition-opacity duration-300" onerror="this.src='https://placehold.co/943x627/e2e8f0/64748b?text=Image+Not+Found'">
+            </div>
+
+            <div class="mt-6 bg-slate-50 p-4 md:p-5 rounded-xl border border-slate-100 shadow-sm">
+                <input type="range" id="eyesight-slider" min="0" max="12" value="0" class="w-full h-2 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                <div class="flex justify-between text-xs text-slate-400 mt-2 font-medium px-1">
+                    <span>0m</span>
+                    <span>3m</span>
+                    <span>6m</span>
+                    <span>9m</span>
+                    <span>12m</span>
+                </div>
+                <p class="text-center text-sm font-bold text-indigo-700 mt-4" id="eyesight-slider-label">생후 0개월의 시야</p>
+            </div>
+        </div>
+
+        <div class="flex justify-center mt-6">
+            <button onclick="copyDashboardUrl()" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-lg">
+                <span>🔗</span> 전용 대시보드 링크 복사하기
+            </button>
+        </div>
+
+        <footer class="text-center text-slate-400 text-xs mt-8 pb-8 leading-relaxed">
+            이 대시보드 링크를 복사하여 QR코드 생성기에 넣으면 QR코드로 배포할 수 있습니다.<br>
+            본 대시보드는 대한민국 소아청소년과 가이드라인 및 아동 심리발달 통계를 바탕으로 작성되었으나, 아기들의 발달은 개인차가 큽니다.<br>질병이 의심되거나 성장이 눈에 띄게 지연될 경우 반드시 전문의와 상담하시기 바랍니다.
+        </footer>
+    </div>
+
+    <!-- Error/Waiting Modal -->
+    <div id="pre-birth-modal" class="fixed inset-0 z-50 hidden flex-col items-center justify-center bg-blue-50/90 backdrop-blur-md p-4 transition-opacity duration-500">
+        <div class="bg-white rounded-3xl p-10 max-w-lg w-full text-center shadow-2xl relative overflow-hidden border border-blue-100">
+            <h2 class="text-6xl mb-6">🤰</h2>
+            <h3 class="text-2xl font-black text-slate-800 mb-4">아가를 만날 날을 기다리고 있어요!</h3>
+            <p class="text-slate-600 mb-6 font-medium leading-relaxed" id="pre-birth-desc">
+                입력하신 생일이 아직 오지 않았습니다.<br>건강한 출산을 진심으로 기원하며, 아가가 태어난 후 대시보드가 자동으로 활성화됩니다.
+            </p>
+            <button onclick="copyDashboardUrl()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-6 rounded-xl transition-colors mb-2">
+                🔗 미리 대시보드 링크 복사하기
+            </button>
+            <a href="?" class="text-sm text-blue-500 hover:underline">새로운 아기 정보 입력하기</a>
+        </div>
+    </div>
+
+    <!-- Birthday Modal -->
+    <div id="birthday-modal" class="fixed inset-0 z-50 hidden flex-col items-center justify-center bg-black/60 backdrop-blur-sm p-4 opacity-0 transition-opacity duration-700">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full text-center transform scale-95 transition-transform duration-700 shadow-2xl relative overflow-hidden" id="birthday-modal-content">
+            <div class="absolute -top-10 -left-10 w-32 h-32 bg-yellow-200 rounded-full mix-blend-multiply filter blur-2xl opacity-70 animate-pulse"></div>
+            <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-pink-200 rounded-full mix-blend-multiply filter blur-2xl opacity-70 animate-pulse"></div>
+            
+            <h2 class="text-6xl mb-4">🎂</h2>
+            <h3 class="text-2xl font-black text-slate-800 mb-2" id="modal-title">첫돌을 축하합니다!</h3>
+            <p class="text-slate-600 mb-6 font-medium leading-relaxed text-sm" id="modal-desc">
+                지난 1년 동안 아기를 건강하게 키워낸<br>부모님의 노고에 진심으로 박수를 보냅니다.
+            </p>
+            <button onclick="closeBirthdayModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl w-full transition-colors">
+                축하해요! 대시보드 보기
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let birthDate;
+        let babyName;
+
+        // [공통 심리 발달 데이터 템플릿]
+        const psycho0to6m = {
+            freud: "<strong>구강기 (0~1세)</strong>: 입과 입술을 통해 세상을 탐색하고 만족감을 느낍니다. 수유와 공갈젖꼭지 등 입의 자극이 정서적 안정에 매우 중요합니다.",
+            erikson: "<strong>신뢰감 대 불신감 (0~1세)</strong>: 울음이라는 신호에 부모가 일관되고 따뜻하게 반응해 주면 세상에 대한 '기본적 신뢰'가 형성됩니다.",
+            piaget: "<strong>감각운동기 (반사기~1차 순환반응)</strong>: 자신의 신체(손가락 빨기 등)를 이용한 반복적인 행동을 통해 감각을 발달시킵니다."
+        };
+        const psycho6to12m = {
+            freud: "<strong>구강기 후기</strong>: 이가 나기 시작하며 깨무는 행동으로 쾌감을 느낍니다. 이유식과 치발기를 통해 적절히 해소시켜 주세요.",
+            erikson: "<strong>신뢰감 심화 (애착 형성)</strong>: 특정 양육자(엄마/아빠)에게 강한 애착을 보이며, 낯가림과 분리불안은 신뢰가 잘 형성되었다는 건강한 증거입니다.",
+            piaget: "<strong>감각운동기 (2~3차 순환반응)</strong>: 외부 대상에 흥미를 가집니다(장난감 떨어뜨리기 등). 눈앞에서 물건이 사라져도 존재함을 아는 '대상영속성'이 발달합니다."
+        };
+        const psycho12mPlus = {
+            freud: "<strong>구강기에서 항문기로의 전환</strong>: 점차 배변 훈련에 관심을 가질 준비를 하며 자율성을 기르는 시기로 넘어갑니다.",
+            erikson: "<strong>자율성 대 수치심 (1~3세 시작)</strong>: 내 맘대로 해보려는 고집이 생깁니다. 스스로 걷고 탐색하도록 안전한 환경에서 격려해주세요.",
+            piaget: "<strong>감각운동기 후기</strong>: 원인과 결과를 이해하기 시작하고, 도구를 사용하여 원하는 것을 얻으려 시도합니다."
+        };
+
+        const vaccines = [
+            { name: "결핵(BCG, 1회용)", targetDays: 21 },
+            { name: "B형간염 (2차)", targetDays: 30 },
+            { name: "DTaP, 폴리오, 로타바이러스 (1차)", targetDays: 60 },
+            { name: "DTaP, 폴리오, 로타바이러스 (2차)", targetDays: 120 },
+            { name: "DTaP, 폴리오, B형간염 (3차)", targetDays: 180 },
+            { name: "독감(인플루엔자) 1차", targetDays: 180 },
+            { name: "수두, MMR, 일본뇌염 (1차)", targetDays: 365 }
+        ];
+
+        const pediatricData = [
+            {
+                minDay: 0, maxDay: 6,
+                weight: "3.3", height: "49.9",
+                feedAmount: "60 ~ 90", feedTimes: "8 ~ 12", feedMax: "800",
+                sleepTotal: "16 ~ 20",
+                sleepPattern: "하루 종일 먹고 자는 시기입니다. 아직 밤낮을 구분하지 못해 1~2시간마다 깹니다.",
+                growthTip: "생리적 체중 감소(5~10%)가 일어날 수 있으나 1주 후 곧 회복됩니다.",
+                dev: ["눈앞 20~30cm 사물만 희미하게 봅니다.", "큰 소리에 깜짝 놀라는 모로반사를 보입니다.", "스킨십을 통해 안정감을 얻습니다."],
+                tips: ["제대(탯줄)가 떨어질 때까지 건조하게 소독/관리해 주세요.", "황달(피부가 노랗게 변함)이 있는지 잘 관찰하세요.", "신생아는 4시간 이상 굶으면 탈수가 올 수 있으니 깨워서라도 먹이세요."],
+                psycho: psycho0to6m
+            },
+            {
+                minDay: 7, maxDay: 13,
+                weight: "3.4", height: "51.0",
+                feedAmount: "60 ~ 80", feedTimes: "7 ~ 8", feedMax: "640",
+                sleepTotal: "16 ~ 18",
+                sleepPattern: "수유 텀이 약간 잡히기 시작하지만 여전히 수시로 먹고 잡니다. 최대 4시간 텀을 넘기지 마세요.",
+                growthTip: "출생 시 체중을 회복하고 본격적으로 살이 붙기 시작합니다.",
+                dev: ["엄마의 냄새와 목소리를 명확히 구분하기 시작합니다.", "흑백 초점책에 아주 짧게 시선을 고정할 수 있습니다."],
+                tips: ["모유수유 시 텀과 양 측정이 어려우니 수유 기록 앱을 꼭 활용하세요.", "양을 늘릴 때는 10~30ml씩 서서히 늘려주세요."],
+                psycho: psycho0to6m
+            },
+            {
+                minDay: 14, maxDay: 27,
+                weight: "4.2", height: "53.0",
+                feedAmount: "80 ~ 120", feedTimes: "6", feedMax: "720",
+                sleepTotal: "15 ~ 18",
+                sleepPattern: "먹고 자는 시간이 규칙을 띠려 하지만 영아 산통(배앓이)으로 저녁에 심하게 울 수 있습니다.",
+                growthTip: "하루 평균 30g씩 체중이 늘어나는 폭풍 성장기입니다.",
+                dev: ["흑백 대비를 잘 봅니다. 모빌을 보여주세요.", "목에 아주 미세하게 힘을 주려 합니다. 1~2분 터미타임을 시도해보세요."],
+                tips: ["먹다 남긴 분유는 아까워도 세균 번식 위험이 있으니 반드시 버리세요.", "BCG 예방접종을 생후 4주 이내에 꼭 완료하세요."],
+                psycho: psycho0to6m
+            },
+            {
+                minDay: 28, maxDay: 60,
+                weight: "5.4", height: "56.0",
+                feedAmount: "120 ~ 140", feedTimes: "6", feedMax: "840 ~ 1000",
+                sleepTotal: "14 ~ 17",
+                sleepPattern: "밤에 자는 시간이 길어집니다(통잠의 조짐). 잘 잔다면 신생아 때처럼 깨워서 먹일 필요 없이 한 텀 건너뛰어도 됩니다.",
+                growthTip: "신생아 티를 벗고 얼굴에 볼살이 포동포동 오릅니다.",
+                dev: ["엄마, 아빠를 보며 의미 있는 '사회적 미소(배냇짓)'를 짓습니다.", "움직이는 물체를 눈으로 조금씩 따라갑니다."],
+                tips: ["통잠을 자서 전체 수유량이 줄었다면 낮 수유량을 조금씩 늘려 밸런스를 맞춰주세요.", "2개월 차 필수 예방접종(DTaP, 소아마비 등)을 예약하세요."],
+                psycho: psycho0to6m
+            },
+            {
+                minDay: 61, maxDay: 90,
+                weight: "6.1", height: "60.0",
+                feedAmount: "140 ~ 160", feedTimes: "6", feedMax: "960 ~ 1080",
+                sleepTotal: "14 ~ 15",
+                sleepPattern: "수면 의식(목욕->마사지->자장가)을 만들기 좋은 시기입니다. 올바른 수유&수면 습관을 잡아주세요.",
+                growthTip: "침을 흘리기 시작하며, 수유텀이 3~4시간으로 안정화됩니다.",
+                dev: ["'아~ 우~' 하는 쿠잉 소리를 내며 옹알이를 준비합니다.", "엎어놓으면 고개를 제법 안정적으로 가눌 수 있습니다."],
+                tips: ["새벽 수유가 습관이 되지 않도록 서서히 줄여나가야 하는 시기입니다.", "가벼운 외출과 산책으로 아기에게 새로운 자극을 주세요."],
+                psycho: psycho0to6m
+            },
+            {
+                minDay: 91, maxDay: 120,
+                weight: "6.6", height: "63.0",
+                feedAmount: "180 ~ 210", feedTimes: "5 ~ 6", feedMax: "800 ~ 1000",
+                sleepTotal: "14 ~ 15",
+                sleepPattern: "백일의 기적! 낮잠 횟수가 줄어들고 밤에 꽤 길게 잘 수 있습니다.",
+                growthTip: "체중 증가 속도가 완만해집니다. 하루 총수유량 1000ml를 넘지 않도록 주의하여 소아비만을 예방하세요.",
+                dev: ["손을 입으로 가져가 빨기 시작합니다(구강기 본격화).", "소리 나는 쪽으로 고개를 정확히 돌릴 수 있습니다."],
+                tips: ["곧 시작될 이유식을 위해 관련 도구(스푼, 턱받이 등)를 준비해 보세요.", "아기가 손을 많이 빨게 되므로 손을 자주 씻겨주세요."],
+                psycho: psycho0to6m
+            },
+            {
+                minDay: 121, maxDay: 150,
+                weight: "7.1", height: "65.0",
+                feedAmount: "180 ~ 210", feedTimes: "5 ~ 6", feedMax: "800 ~ 1000",
+                sleepTotal: "13 ~ 14",
+                sleepPattern: "이앓이나 발달 급성장기로 인해 잘 자던 아기가 새벽에 깨는 '수면 퇴행'이 올 수 있습니다.",
+                growthTip: "출생 시 몸무게의 2배가 됩니다. 소화력이 좋아져 변의 횟수가 줄어들 수 있습니다.",
+                dev: ["뒤집기를 시도하거나 이미 성공합니다. 침대에서 떨어지지 않게 각별히 주의하세요.", "자신의 이름을 부르면 반응합니다."],
+                tips: ["이유식(초기)을 시작하기 좋은 시기입니다. 하루 1회 수유 대신 이유식 스푼 연습을 병행하세요.", "첫니가 나면 거즈로 잇몸을 닦아주세요."],
+                psycho: psycho0to6m
+            },
+            {
+                minDay: 151, maxDay: 180,
+                weight: "7.5", height: "67.0",
+                feedAmount: "180 ~ 210", feedTimes: "3 ~ 4", feedMax: "800 ~ 940",
+                sleepTotal: "13 ~ 14",
+                sleepPattern: "밤중 수유를 본격적으로 끊어야 하는 시점입니다. 밤에 깨더라도 수유 대신 토닥여서 재워보세요.",
+                growthTip: "모체로부터 받은 철분이 떨어지는 시기입니다. 소고기를 갈아 넣은 이유식이 필수적입니다.",
+                dev: ["혼자서 제법 오래 앉아있을 수 있습니다.", "장난감을 이 손에서 저 손으로 옮겨 쥘 수 있습니다."],
+                tips: ["수유 백과사전의 가이드라인을 참고해 이유식과 수유량의 밸런스(하루 총량 1000ml 이하)를 맞춰주세요.", "낯가림이 서서히 시작될 수 있습니다."],
+                psycho: psycho0to6m
+            },
+            {
+                minDay: 181, maxDay: 210,
+                weight: "7.9", height: "69.0",
+                feedAmount: "이유식 중기 1~2회", feedTimes: "수유 3~4회", feedMax: "수유 800ml 내외",
+                sleepTotal: "12 ~ 14",
+                sleepPattern: "낮잠은 2회 정도로 줄어들고 밤에 10시간 이상 통잠을 잡니다.",
+                growthTip: "이유식의 양이 늘면서 분유/모유 섭취량이 서서히 줄어드는 자연스러운 시기입니다.",
+                dev: ["배밀이를 시작해 온 집안을 탐색하려 합니다. 안전문을 설치하세요.", "'엄마', '아빠'와 같은 자음을 섞은 옹알이를 합니다."],
+                tips: ["밤수를 완전히 끊어 깊은 수면을 통한 성장 호르몬 분비를 촉진시켜 주세요.", "분리불안이 생기므로 까꿍 놀이로 대상영속성을 길러주세요."],
+                psycho: psycho6to12m
+            },
+            {
+                minDay: 211, maxDay: 240,
+                weight: "8.3", height: "70.5",
+                feedAmount: "이유식 중기 2회", feedTimes: "수유 3~4회", feedMax: "수유 700ml 내외",
+                sleepTotal: "12 ~ 14",
+                sleepPattern: "수면 패턴이 거의 성인과 비슷하게 고정됩니다.",
+                growthTip: "활동량이 엄청나게 늘어나 체중 증가는 이전보다 더뎌 보일 수 있습니다.",
+                dev: ["네 발로 기어 다니기 시작하고, 혼자서 앉는 자세를 바꿀 수 있습니다.", "엄지와 검지를 사용해 작은 물건을 집어 올립니다(소근육 발달)."],
+                tips: ["위험한 물건, 특히 삼킬 수 있는 작은 부품이 바닥에 없는지 항상 확인하세요.", "간식으로 핑거푸드를 제공해 소근육 발달과 스스로 먹기를 도와주세요."],
+                psycho: psycho6to12m
+            },
+            {
+                minDay: 241, maxDay: 270,
+                weight: "8.6", height: "72.0",
+                feedAmount: "이유식 후기 3회", feedTimes: "수유 2~3회", feedMax: "수유 600ml 내외",
+                sleepTotal: "12 ~ 14",
+                sleepPattern: "이앓이가 심해져 자다 울며 깰 수 있습니다. 잇몸 마사지를 해주세요.",
+                growthTip: "몸무게보다 키가 자라며 골격이 튼튼해지는 시기입니다.",
+                dev: ["가구나 소파를 잡고 일어서려고 합니다.", "'안돼'라는 말의 의미를 이해하고 눈치를 보기 시작합니다."],
+                tips: ["단호하고 짧은 목소리로 위험한 행동에 대한 기초적인 훈육을 시작할 수 있습니다.", "다양한 질감의 식재료를 경험하게 해주세요."],
+                psycho: psycho6to12m
+            },
+            {
+                minDay: 271, maxDay: 300,
+                weight: "8.9", height: "73.5",
+                feedAmount: "이유식 후기 3회", feedTimes: "수유 2~3회", feedMax: "수유 500~600ml",
+                sleepTotal: "12 ~ 13",
+                sleepPattern: "밤잠 10-11시간, 낮잠 2회로 매우 규칙적입니다.",
+                growthTip: "이유식이 주식이 되고 수유가 간식이 되어가는 과도기입니다.",
+                dev: ["잡고 일어선 상태에서 옆으로 게걸음(크루징)을 치며 이동합니다.", "음악에 맞춰 몸을 흔들거나 짝짜꿍, 잼잼 같은 모방 행동을 합니다."],
+                tips: ["아기가 걷기 연습을 할 수 있도록 모서리가 둥근 가구를 배치하고 미끄럼 방지 양말을 신겨주세요.", "컵으로 물 마시는 연습을 본격적으로 시작하세요."],
+                psycho: psycho6to12m
+            },
+            {
+                minDay: 301, maxDay: 330,
+                weight: "9.2", height: "74.8",
+                feedAmount: "완료기 이유식 3회", feedTimes: "간식 및 우유", feedMax: "분유/우유 400~500ml",
+                sleepTotal: "12 ~ 13",
+                sleepPattern: "활동량이 많아 깊이 잡니다. 낮잠이 1회로 줄어들 준비를 합니다.",
+                growthTip: "돌발진(갑자기 열이 나고 열꽃이 핌)을 겪을 수 있으니 해열제를 상비하세요.",
+                dev: ["부모가 손을 잡아주면 걷기도 하고, 혼자 잠시 서 있기도 합니다.", "자신이 원하는 것을 손가락으로 가리키며 의사표현을 확실히 합니다."],
+                tips: ["그림책을 많이 읽어주며 사물의 이름을 알려주어 언어 발달을 자극해 주세요."],
+                psycho: psycho6to12m
+            },
+            {
+                minDay: 331, maxDay: 364,
+                weight: "9.5", height: "76.0",
+                feedAmount: "유아식(진밥) 3회", feedTimes: "간식 2회", feedMax: "생우유/분유 400ml",
+                sleepTotal: "11 ~ 13",
+                sleepPattern: "수면 거부가 생길 수 있습니다. 일관된 수면 의식을 유지하세요.",
+                growthTip: "이제 아기가 아니라 '유아'의 모습에 가까워집니다. 성장 속도가 완만해져 먹는 양이 줄어 보일 수 있습니다.",
+                dev: ["혼자서 몇 발자국을 걷기 시작합니다.", "'엄마', '아빠' 외에 '물', '맘마' 등 의미 있는 단어를 2-3개 말합니다."],
+                tips: ["돌 이후부터는 분유 대신 생우유(멸균우유)로 넘어가며 젖병 떼기 연습을 완료해야 합니다.", "영유아 검진과 돌 이후 필수 예방접종을 잊지 마세요."],
+                psycho: psycho6to12m
+            },
+            {
+                minDay: 365, maxDay: 377,
+                weight: "9.6+", height: "76.5+",
+                feedAmount: "유아식 3끼", feedTimes: "간식 2회", feedMax: "생우유 400ml",
+                sleepTotal: "11 ~ 13",
+                sleepPattern: "낮잠은 하루 1번으로 고정되며 밤에 아주 잘 잡니다.",
+                growthTip: "첫돌 축하합니다! 🎉 폭발적이었던 1년의 성장을 마치고 이제 인지와 언어 발달에 집중합니다.",
+                dev: ["도구를 제법 잘 다룹니다(숟가락질 시도).", "간단한 심부름('기저귀 가져와')을 이해하고 수행할 수 있습니다."],
+                tips: ["이제 식탁에 앉아 가족과 함께 식사하는 습관을 들여주세요."],
+                psycho: psycho12mPlus
+            }
+        ];
+
+        // 초기 앱 설정 (URL 파라미터 확인 및 화면 전환)
+        function initApp() {
+            const urlParams = new URLSearchParams(window.location.search);
+            babyName = urlParams.get('name');
+            const birthParam = urlParams.get('birth');
+
+            if (!babyName || !birthParam) {
+                // 파라미터가 없으면 설정 폼을 노출
+                document.getElementById('setup-screen').classList.remove('hidden');
+                document.getElementById('dashboard-container').classList.add('hidden');
+                return;
+            }
+
+            // 파라미터가 있으면 대시보드 노출
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('dashboard-container').classList.remove('hidden');
+            
+            birthDate = new Date(birthParam + 'T00:00:00');
+            applyPersonalizedData();
+            updateDashboard();
+        }
+
+        // 폼 제출 시 URL 파라미터 생성 후 새로고침
+        function generateDashboard(event) {
+            event.preventDefault();
+            const nameInput = document.getElementById('input-name').value;
+            const birthInput = document.getElementById('input-birth').value;
+            
+            if(nameInput && birthInput) {
+                const url = new URL(window.location.href);
+                url.searchParams.set('name', nameInput);
+                url.searchParams.set('birth', birthInput);
+                window.location.href = url.href; // URL 이동 (페이지 리로드)
+            }
+        }
+
+        // URL 복사 기능 (QR코드 만들기용)
+        function copyDashboardUrl() {
+            const currentUrl = window.location.href;
+            navigator.clipboard.writeText(currentUrl).then(() => {
+                alert('대시보드 전용 링크가 복사되었습니다!');
+            }).catch(err => {
+                // fallback for some iframe/mobile environments
+                const tempInput = document.createElement("input");
+                tempInput.value = currentUrl;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+                alert('대시보드 전용 링크가 복사되었습니다!');
+            });
+        }
+
+        function applyPersonalizedData() {
+            const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+            const formattedBirth = birthDate.toLocaleDateString('ko-KR', dateOptions);
+
+            // 타이틀 및 텍스트 교체
+            document.getElementById('page-title').innerText = `${babyName}의 성장/육아 안내페이지 👶`;
+            document.getElementById('main-title').innerHTML = `${babyName}의 성장 대시보드 <span class="text-2xl">👶</span>`;
+            document.getElementById('birth-subtitle').innerText = `생일: ${formattedBirth}`;
+            
+            // 아직 태어나지 않았을 때 모달 텍스트 교체
+            document.getElementById('pre-birth-desc').innerHTML = `입력하신 생일(${formattedBirth})이 아직 오지 않았습니다.<br>건강한 출산을 진심으로 기원하며, 아가가 태어난 후 대시보드가 자동으로 활성화됩니다.`;
+
+            // 돌 축하 모달 텍스트 교체
+            document.getElementById('modal-title').innerText = `${babyName}의 첫돌을 축하합니다!`;
+            document.getElementById('modal-desc').innerHTML = `지난 1년 동안 ${babyName}를(을) 건강하게 키워낸<br>부모님의 노고에 진심으로 박수를 보냐냅니다.<br>${babyName}야! 앞으로도 아프지 않고 튼튼하게 자라줘!`;
+        }
+
+        function getAgeData(days) {
+            return pediatricData.find(data => days >= data.minDay && days <= data.maxDay) || pediatricData[pediatricData.length - 1];
+        }
+
+        function updateDashboard() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const birth = new Date(birthDate.getTime());
+            birth.setHours(0, 0, 0, 0);
+            
+            const diffTime = today.getTime() - birth.getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            document.getElementById('current-date-display').innerText = today.toLocaleDateString('ko-KR', options);
+
+            // 출생 전 처리 로직
+            if (diffDays < 0) {
+                document.getElementById('main-content-grid').style.display = 'none';
+                document.getElementById('food-guide-section').style.display = 'none';
+                document.getElementById('pre-birth-modal').classList.remove('hidden');
+                document.getElementById('pre-birth-modal').classList.add('flex');
+                document.getElementById('days-old').innerText = "D-" + Math.abs(diffDays);
+                document.getElementById('weeks-old').innerText = "0";
+                document.getElementById('months-old').innerText = "0";
+                return;
+            }
+
+            // 일반 계산
+            const displayDays = diffDays + 1; // 한국 육아 기준 태어난 당일이 생후 1일차
+            const weeks = Math.floor(diffDays / 7) + 1; // 실생활 기준인 n번째 주(주차)로 표기하기 위해 +1
+            const months = Math.floor(diffDays / 30.436875); // 개월 수는 통상적으로 '만 개월' 사용
+
+            // 애니메이션
+            animateValue('days-old', 0, displayDays, 1000);
+            document.getElementById('weeks-old').innerText = weeks;
+            document.getElementById('months-old').innerText = months;
+
+            // 돌 축하 모달 로직
+            if (diffDays === 365 || diffDays === 366) {
+                const bModal = document.getElementById('birthday-modal');
+                const bModalContent = document.getElementById('birthday-modal-content');
+                bModal.classList.remove('hidden');
+                bModal.classList.add('flex');
+                setTimeout(() => {
+                    bModal.classList.remove('opacity-0');
+                    bModalContent.classList.remove('scale-95');
+                }, 100);
+            }
+
+            // 수유 백과사전 표출 로직 (180일 이하일 때만 노출)
+            const feedingEncyclopedia = document.getElementById('feeding-encyclopedia');
+            if (diffDays <= 180) {
+                feedingEncyclopedia.classList.remove('hidden');
+            } else {
+                feedingEncyclopedia.classList.add('hidden');
+            }
+
+            // 데이터 렌더링
+            const currentData = getAgeData(diffDays);
+
+            document.getElementById('avg-weight').innerText = currentData.weight + (currentData.weight.includes('+') ? "" : " kg");
+            document.getElementById('avg-height').innerText = currentData.height + (currentData.height.includes('+') ? "" : " cm");
+            document.getElementById('growth-tip').innerHTML = currentData.growthTip;
+
+            document.getElementById('feed-amount').innerText = currentData.feedAmount + (currentData.feedAmount.includes('회') ? "" : " ml");
+            document.getElementById('feed-times').innerText = currentData.feedTimes + (currentData.feedTimes.includes('회') ? "" : " 회");
+            document.getElementById('feed-max').innerText = currentData.feedMax + (currentData.feedMax.includes('ml') ? "" : " ml");
+
+            document.getElementById('sleep-total').innerText = currentData.sleepTotal + " 시간";
+            document.getElementById('sleep-pattern').innerText = currentData.sleepPattern;
+
+            document.getElementById('psycho-freud').innerHTML = currentData.psycho.freud;
+            document.getElementById('psycho-erikson').innerHTML = currentData.psycho.erikson;
+            document.getElementById('psycho-piaget').innerHTML = currentData.psycho.piaget;
+
+            const devList = document.getElementById('dev-list');
+            devList.innerHTML = '';
+            currentData.dev.forEach(item => {
+                const li = document.createElement('li');
+                li.className = "flex gap-3 items-start border-b border-amber-100/50 pb-2 last:border-0";
+                li.innerHTML = `<span class="text-amber-500 mt-0.5 flex-shrink-0">🔸</span> <span>${item}</span>`;
+                devList.appendChild(li);
+            });
+
+            const tipsDiv = document.getElementById('care-tips');
+            tipsDiv.innerHTML = '';
+            currentData.tips.forEach(item => {
+                const p = document.createElement('p');
+                p.className = "flex gap-2 items-start";
+                p.innerHTML = `<span class="text-rose-400 mt-0.5">✔</span> <span>${item}</span>`;
+                tipsDiv.appendChild(p);
+            });
+
+            // 예방접종 캘린더
+            const vaxList = document.getElementById('vaccine-list');
+            if(vaxList) {
+                vaxList.innerHTML = '';
+                vaccines.forEach(vax => {
+                    const vaxDate = new Date(birth.getTime() + (vax.targetDays * 24 * 60 * 60 * 1000));
+                    const vDiffTime = vaxDate.getTime() - today.getTime();
+                    const vDiffDays = Math.ceil(vDiffTime / (1000 * 60 * 60 * 24));
+                    
+                    let badgeClass = "";
+                    let dDayText = "";
+                    let isCompleted = false;
+
+                    if (vDiffDays > 14) {
+                        badgeClass = "bg-blue-100 text-blue-600 font-semibold";
+                        dDayText = `D-${vDiffDays}`;
+                    } else if (vDiffDays >= 0 && vDiffDays <= 14) {
+                        badgeClass = "bg-rose-500 text-white font-bold animate-pulse shadow-sm";
+                        dDayText = vDiffDays === 0 ? "D-Day" : `D-${vDiffDays}`;
+                    } else if (vDiffDays < 0 && vDiffDays >= -30) {
+                        badgeClass = "bg-emerald-100 text-emerald-600 font-bold";
+                        dDayText = "접종기간";
+                    } else {
+                        badgeClass = "bg-slate-100 text-slate-400";
+                        dDayText = "시기경과";
+                        isCompleted = true;
+                    }
+
+                    const formattedDate = vaxDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
+
+                    const div = document.createElement('div');
+                    div.className = `flex justify-between items-center p-3 rounded-xl border ${isCompleted ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-white border-blue-100 shadow-sm'}`;
+                    div.innerHTML = `
+                        <div class="flex flex-col">
+                            <span class="text-sm font-bold text-slate-800 ${isCompleted ? 'line-through decoration-slate-300' : ''}">${vax.name}</span>
+                            <span class="text-xs text-slate-400">${formattedDate} 경</span>
+                        </div>
+                        <span class="text-xs px-3 py-1 rounded-full ${badgeClass}">${dDayText}</span>
+                    `;
+                    vaxList.appendChild(div);
+                });
+            }
+
+            // 이유식 식재료 동적 처리
+            const allowedContainer = document.getElementById('allowed-foods');
+            const bannedWrapper = document.getElementById('banned-foods-wrapper');
+
+            if (diffDays >= 365) {
+                bannedWrapper.classList.add('hidden');
+            } else {
+                bannedWrapper.classList.remove('hidden');
+            }
+
+            if (months < 5) {
+                allowedContainer.innerHTML = '<span class="text-sm text-slate-500 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm w-full text-center">아직은 모유와 분유 수유에 집중할 시기예요. 만 6개월 무렵부터 이유식을 시작할 준비를 해보아요! 🍼</span>';
+            } else {
+                let highlightHtml = '';
+                let normalHtml = '';
+
+                if (months >= 6) {
+                    highlightHtml += `<span class="inline-flex items-center gap-1 bg-rose-100 text-rose-700 px-3 py-1.5 rounded-full text-sm font-bold border border-rose-200 shadow-sm">🥩 소고기 <span class="bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-md">매일/철분필수</span></span>`;
+                    const m6 = ['쌀', '오트밀', '애호박', '브로콜리', '청경채', '양배추', '감자', '고구마', '사과', '배', '바나나'];
+                    m6.forEach(f => normalHtml += `<span class="inline-flex items-center bg-white border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-full text-sm shadow-sm">${f}</span>`);
+                }
+
+                if (months >= 7) {
+                    highlightHtml += `
+                    <span class="inline-flex items-center gap-1 bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full text-sm font-bold border border-amber-200 shadow-sm">🥚 계란 노른자(완숙) <span class="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-md">알레르기 테스트</span></span>
+                    <span class="inline-flex items-center gap-1 bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full text-sm font-bold border border-amber-200 shadow-sm">🌾 밀가루 <span class="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-md">알레르기 테스트</span></span>
+                    <span class="inline-flex items-center gap-1 bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full text-sm font-bold border border-amber-200 shadow-sm">🥜 땅콩가루 <span class="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-md">알레르기 테스트</span></span>
+                    `;
+                    const m7 = ['닭고기', '두부', '흰살생선(대구/가자미)', '당근', '시금치', '양파', '양송이버섯'];
+                    m7.forEach(f => normalHtml += `<span class="inline-flex items-center bg-white border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-full text-sm shadow-sm">${f}</span>`);
+                }
+
+                if (months >= 9) {
+                    const m9 = ['돼지고기(살코기)', '계란 흰자', '아기용 치즈', '무가당 플레인 요거트', '참기름/들기름(소량)'];
+                    m9.forEach(f => normalHtml += `<span class="inline-flex items-center bg-white border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-full text-sm shadow-sm">${f}</span>`);
+                }
+
+                allowedContainer.innerHTML = highlightHtml + normalHtml;
+            }
+
+            // 시야 시뮬레이션
+            const cappedMonth = Math.min(Math.max(0, months), 12);
+            const eyesightSlider = document.getElementById('eyesight-slider');
+            const eyesightImage = document.getElementById('eyesight-image');
+            const eyesightLabel = document.getElementById('eyesight-slider-label');
+            const eyesightBadge = document.getElementById('eyesight-badge');
+
+            eyesightSlider.value = cappedMonth;
+            eyesightBadge.innerText = `현재 생후 만 ${months}개월`;
+            updateEyesight(cappedMonth);
+
+            eyesightSlider.addEventListener('input', function(e) {
+                updateEyesight(e.target.value);
+            });
+
+            function updateEyesight(m) {
+                eyesightImage.style.opacity = 0.5; 
+                setTimeout(() => {
+                    eyesightImage.src = `eyesights/m${m}.jpg`;
+                    eyesightImage.style.opacity = 1;
+                }, 150);
+                
+                let labelStr = `생후 ${m}개월의 시야`;
+                if(m == 0) labelStr = "생후 0개월 - 흑백으로 보이며 20~30cm 앞만 희미하게 보여요";
+                else if(m == 1 || m == 2) labelStr = `생후 ${m}개월 - 서서히 색을 구분하고 눈을 맞추기 시작해요`;
+                else if(m >= 3 && m <= 5) labelStr = `생후 ${m}개월 - 입체감이 생기고 움직이는 물체를 잘 따라가요`;
+                else if(m >= 6 && m <= 8) labelStr = `생후 ${m}개월 - 양안 시력이 발달하여 원근감이 아주 뚜렷해져요`;
+                else if(m >= 9 && m <= 11) labelStr = `생후 ${m}개월 - 작은 물건도 정확히 인지할 만큼 시력이 발달했어요`;
+                else if(m == 12) labelStr = "생후 12개월 - 성인 시력의 기초가 완성되는 시기예요";
+                
+                eyesightLabel.innerText = labelStr;
+            }
+        }
+
+        function animateValue(id, start, end, duration) {
+            if (start === end) {
+                document.getElementById(id).innerHTML = end;
+                return;
+            }
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const easeOutProgress = progress * (2 - progress); 
+                document.getElementById(id).innerHTML = Math.floor(easeOutProgress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function closeBirthdayModal() {
+            const bModal = document.getElementById('birthday-modal');
+            const bModalContent = document.getElementById('birthday-modal-content');
+            bModal.classList.add('opacity-0');
+            bModalContent.classList.add('scale-95');
+            setTimeout(() => {
+                bModal.classList.remove('flex');
+                bModal.classList.add('hidden');
+            }, 700);
+        }
+
+        // 페이지 로드 시 앱 초기화 실행
+        window.onload = initApp;
+    </script>
+</body>
+</html>
