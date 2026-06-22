@@ -53,7 +53,7 @@
         <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-200 rounded-full mix-blend-multiply filter blur-2xl opacity-50"></div>
         <div class="text-center mb-8 relative z-10">
             <h1 class="text-3xl font-black text-slate-800 mb-2">대시보드 만들기 👶</h1>
-            <p class="text-slate-500 text-sm">아기 이름과 생일을 입력하여<br>전용 육아 대시보드 URL을 생성하세요.</p>
+            <p class="text-slate-500 text-sm">아기 정보와 생일을 입력하여<br>전용 육아 대시보드 URL을 생성하세요.</p>
         </div>
         
         <form id="setup-form" onsubmit="generateDashboard(event)" class="space-y-5 relative z-10">
@@ -61,10 +61,27 @@
                 <label for="input-name" class="block text-sm font-bold text-slate-700 mb-1">아기 이름 (또는 태명)</label>
                 <input type="text" id="input-name" required placeholder="예: 빠망이" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
             </div>
+            
+            <!-- 신규 추가: 성별 선택 -->
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">아기 성별</label>
+                <div class="flex gap-4">
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="input-gender" value="boy" checked class="peer sr-only">
+                        <div class="text-center px-4 py-3 rounded-xl border border-slate-200 peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-700 font-bold transition-all shadow-sm">💙 남아</div>
+                    </label>
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="input-gender" value="girl" class="peer sr-only">
+                        <div class="text-center px-4 py-3 rounded-xl border border-slate-200 peer-checked:bg-pink-50 peer-checked:border-pink-500 peer-checked:text-pink-700 font-bold transition-all shadow-sm">💖 여아</div>
+                    </label>
+                </div>
+            </div>
+
             <div>
                 <label for="input-birth" class="block text-sm font-bold text-slate-700 mb-1">아기 생일 (또는 출산예정일)</label>
                 <input type="date" id="input-birth" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-slate-700">
             </div>
+            
             <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl transition-colors shadow-lg shadow-blue-200 mt-4">
                 전용 대시보드 생성하기
             </button>
@@ -110,7 +127,7 @@
                     <div class="bg-indigo-100 p-3 rounded-full text-indigo-600 text-xl">⚖️</div>
                     <h2 class="text-xl font-bold text-slate-800">이번 주 평균 성장</h2>
                 </div>
-                <p class="text-xs text-slate-400 mb-4">* 질병관리청 남아 표준 성장도표 기준</p>
+                <p class="text-xs text-slate-400 mb-4">* 질병관리청 <span id="gender-text-label" class="font-bold text-slate-600">남아</span> 표준 성장도표 기준</p>
                 
                 <div class="space-y-4 flex-grow">
                     <div class="bg-indigo-50 rounded-xl p-4 flex justify-between items-center">
@@ -499,6 +516,7 @@
     <script>
         let birthDate;
         let babyName;
+        let babyGender;
 
         // [공통 심리 발달 데이터 템플릿]
         const psycho0to6m = {
@@ -527,10 +545,12 @@
             { name: "수두, MMR, 일본뇌염 (1차)", targetDays: 365 }
         ];
 
+        // 체중, 신장 데이터를 남아(boy), 여아(girl)로 분리
         const pediatricData = [
             {
                 minDay: 0, maxDay: 6,
-                weight: "3.3", height: "49.9",
+                weight: { boy: "3.3", girl: "3.2" }, 
+                height: { boy: "49.9", girl: "49.1" },
                 feedAmount: "60 ~ 90", feedTimes: "8 ~ 12", feedMax: "800",
                 sleepTotal: "16 ~ 20",
                 sleepPattern: "하루 종일 먹고 자는 시기입니다. 아직 밤낮을 구분하지 못해 1~2시간마다 깹니다.",
@@ -541,7 +561,8 @@
             },
             {
                 minDay: 7, maxDay: 13,
-                weight: "3.4", height: "51.0",
+                weight: { boy: "3.4", girl: "3.3" }, 
+                height: { boy: "51.0", girl: "50.0" },
                 feedAmount: "60 ~ 80", feedTimes: "7 ~ 8", feedMax: "640",
                 sleepTotal: "16 ~ 18",
                 sleepPattern: "수유 텀이 약간 잡히기 시작하지만 여전히 수시로 먹고 잡니다. 최대 4시간 텀을 넘기지 마세요.",
@@ -552,7 +573,8 @@
             },
             {
                 minDay: 14, maxDay: 27,
-                weight: "4.2", height: "53.0",
+                weight: { boy: "4.2", girl: "4.0" }, 
+                height: { boy: "53.0", girl: "52.0" },
                 feedAmount: "80 ~ 120", feedTimes: "6", feedMax: "720",
                 sleepTotal: "15 ~ 18",
                 sleepPattern: "먹고 자는 시간이 규칙을 띠려 하지만 영아 산통(배앓이)으로 저녁에 심하게 울 수 있습니다.",
@@ -563,7 +585,8 @@
             },
             {
                 minDay: 28, maxDay: 60,
-                weight: "5.4", height: "56.0",
+                weight: { boy: "5.4", girl: "5.0" }, 
+                height: { boy: "56.0", girl: "55.0" },
                 feedAmount: "120 ~ 140", feedTimes: "6", feedMax: "840 ~ 1000",
                 sleepTotal: "14 ~ 17",
                 sleepPattern: "밤에 자는 시간이 길어집니다(통잠의 조짐). 잘 잔다면 신생아 때처럼 깨워서 먹일 필요 없이 한 텀 건너뛰어도 됩니다.",
@@ -574,7 +597,8 @@
             },
             {
                 minDay: 61, maxDay: 90,
-                weight: "6.1", height: "60.0",
+                weight: { boy: "6.1", girl: "5.6" }, 
+                height: { boy: "60.0", girl: "59.0" },
                 feedAmount: "140 ~ 160", feedTimes: "6", feedMax: "960 ~ 1080",
                 sleepTotal: "14 ~ 15",
                 sleepPattern: "수면 의식(목욕->마사지->자장가)을 만들기 좋은 시기입니다. 올바른 수유&수면 습관을 잡아주세요.",
@@ -585,7 +609,8 @@
             },
             {
                 minDay: 91, maxDay: 120,
-                weight: "6.6", height: "63.0",
+                weight: { boy: "6.6", girl: "6.1" }, 
+                height: { boy: "63.0", girl: "62.0" },
                 feedAmount: "180 ~ 210", feedTimes: "5 ~ 6", feedMax: "800 ~ 1000",
                 sleepTotal: "14 ~ 15",
                 sleepPattern: "백일의 기적! 낮잠 횟수가 줄어들고 밤에 꽤 길게 잘 수 있습니다.",
@@ -596,7 +621,8 @@
             },
             {
                 minDay: 121, maxDay: 150,
-                weight: "7.1", height: "65.0",
+                weight: { boy: "7.1", girl: "6.6" }, 
+                height: { boy: "65.0", girl: "64.0" },
                 feedAmount: "180 ~ 210", feedTimes: "5 ~ 6", feedMax: "800 ~ 1000",
                 sleepTotal: "13 ~ 14",
                 sleepPattern: "이앓이나 발달 급성장기로 인해 잘 자던 아기가 새벽에 깨는 '수면 퇴행'이 올 수 있습니다.",
@@ -607,7 +633,8 @@
             },
             {
                 minDay: 151, maxDay: 180,
-                weight: "7.5", height: "67.0",
+                weight: { boy: "7.5", girl: "7.0" }, 
+                height: { boy: "67.0", girl: "65.5" },
                 feedAmount: "180 ~ 210", feedTimes: "3 ~ 4", feedMax: "800 ~ 940",
                 sleepTotal: "13 ~ 14",
                 sleepPattern: "밤중 수유를 본격적으로 끊어야 하는 시점입니다. 밤에 깨더라도 수유 대신 토닥여서 재워보세요.",
@@ -618,7 +645,8 @@
             },
             {
                 minDay: 181, maxDay: 210,
-                weight: "7.9", height: "69.0",
+                weight: { boy: "7.9", girl: "7.3" }, 
+                height: { boy: "69.0", girl: "67.0" },
                 feedAmount: "이유식 중기 1~2회", feedTimes: "수유 3~4회", feedMax: "수유 800ml 내외",
                 sleepTotal: "12 ~ 14",
                 sleepPattern: "낮잠은 2회 정도로 줄어들고 밤에 10시간 이상 통잠을 잡니다.",
@@ -629,7 +657,8 @@
             },
             {
                 minDay: 211, maxDay: 240,
-                weight: "8.3", height: "70.5",
+                weight: { boy: "8.3", girl: "7.6" }, 
+                height: { boy: "70.5", girl: "68.5" },
                 feedAmount: "이유식 중기 2회", feedTimes: "수유 3~4회", feedMax: "수유 700ml 내외",
                 sleepTotal: "12 ~ 14",
                 sleepPattern: "수면 패턴이 거의 성인과 비슷하게 고정됩니다.",
@@ -640,7 +669,8 @@
             },
             {
                 minDay: 241, maxDay: 270,
-                weight: "8.6", height: "72.0",
+                weight: { boy: "8.6", girl: "7.9" }, 
+                height: { boy: "72.0", girl: "70.0" },
                 feedAmount: "이유식 후기 3회", feedTimes: "수유 2~3회", feedMax: "수유 600ml 내외",
                 sleepTotal: "12 ~ 14",
                 sleepPattern: "이앓이가 심해져 자다 울며 깰 수 있습니다. 잇몸 마사지를 해주세요.",
@@ -651,7 +681,8 @@
             },
             {
                 minDay: 271, maxDay: 300,
-                weight: "8.9", height: "73.5",
+                weight: { boy: "8.9", girl: "8.2" }, 
+                height: { boy: "73.5", girl: "71.5" },
                 feedAmount: "이유식 후기 3회", feedTimes: "수유 2~3회", feedMax: "수유 500~600ml",
                 sleepTotal: "12 ~ 13",
                 sleepPattern: "밤잠 10-11시간, 낮잠 2회로 매우 규칙적입니다.",
@@ -662,7 +693,8 @@
             },
             {
                 minDay: 301, maxDay: 330,
-                weight: "9.2", height: "74.8",
+                weight: { boy: "9.2", girl: "8.5" }, 
+                height: { boy: "74.8", girl: "73.0" },
                 feedAmount: "완료기 이유식 3회", feedTimes: "간식 및 우유", feedMax: "분유/우유 400~500ml",
                 sleepTotal: "12 ~ 13",
                 sleepPattern: "활동량이 많아 깊이 잡니다. 낮잠이 1회로 줄어들 준비를 합니다.",
@@ -673,7 +705,8 @@
             },
             {
                 minDay: 331, maxDay: 364,
-                weight: "9.5", height: "76.0",
+                weight: { boy: "9.5", girl: "8.8" }, 
+                height: { boy: "76.0", girl: "74.0" },
                 feedAmount: "유아식(진밥) 3회", feedTimes: "간식 2회", feedMax: "생우유/분유 400ml",
                 sleepTotal: "11 ~ 13",
                 sleepPattern: "수면 거부가 생길 수 있습니다. 일관된 수면 의식을 유지하세요.",
@@ -684,7 +717,8 @@
             },
             {
                 minDay: 365, maxDay: 377,
-                weight: "9.6+", height: "76.5+",
+                weight: { boy: "9.6+", girl: "8.9+" }, 
+                height: { boy: "76.5+", girl: "74.5+" },
                 feedAmount: "유아식 3끼", feedTimes: "간식 2회", feedMax: "생우유 400ml",
                 sleepTotal: "11 ~ 13",
                 sleepPattern: "낮잠은 하루 1번으로 고정되며 밤에 아주 잘 잡니다.",
@@ -700,6 +734,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             babyName = urlParams.get('name');
             const birthParam = urlParams.get('birth');
+            babyGender = urlParams.get('gender') || 'boy'; // 성별 파라미터 가져오기 (기본값: 남아)
 
             if (!babyName || !birthParam) {
                 // 파라미터가 없으면 설정 폼을 노출
@@ -722,11 +757,13 @@
             event.preventDefault();
             const nameInput = document.getElementById('input-name').value;
             const birthInput = document.getElementById('input-birth').value;
+            const genderInput = document.querySelector('input[name="input-gender"]:checked').value;
             
             if(nameInput && birthInput) {
                 const url = new URL(window.location.href);
                 url.searchParams.set('name', nameInput);
                 url.searchParams.set('birth', birthInput);
+                url.searchParams.set('gender', genderInput);
                 window.location.href = url.href; // URL 이동 (페이지 리로드)
             }
         }
@@ -751,18 +788,21 @@
         function applyPersonalizedData() {
             const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
             const formattedBirth = birthDate.toLocaleDateString('ko-KR', dateOptions);
+            const genderEmoji = babyGender === 'girl' ? '👧' : '👦';
+            const genderText = babyGender === 'girl' ? '여아' : '남아';
 
             // 타이틀 및 텍스트 교체
             document.getElementById('page-title').innerText = `${babyName}의 성장/육아 안내페이지 👶`;
-            document.getElementById('main-title').innerHTML = `${babyName}의 성장 대시보드 <span class="text-2xl">👶</span>`;
+            document.getElementById('main-title').innerHTML = `${babyName}의 성장 대시보드 <span class="text-2xl">${genderEmoji}</span>`;
             document.getElementById('birth-subtitle').innerText = `생일: ${formattedBirth}`;
+            document.getElementById('gender-text-label').innerText = genderText; // 성장도표 안내문구 변경
             
             // 아직 태어나지 않았을 때 모달 텍스트 교체
             document.getElementById('pre-birth-desc').innerHTML = `입력하신 생일(${formattedBirth})이 아직 오지 않았습니다.<br>건강한 출산을 진심으로 기원하며, 아가가 태어난 후 대시보드가 자동으로 활성화됩니다.`;
 
             // 돌 축하 모달 텍스트 교체
             document.getElementById('modal-title').innerText = `${babyName}의 첫돌을 축하합니다!`;
-            document.getElementById('modal-desc').innerHTML = `지난 1년 동안 ${babyName}를(을) 건강하게 키워낸<br>부모님의 노고에 진심으로 박수를 보냐냅니다.<br>${babyName}야! 앞으로도 아프지 않고 튼튼하게 자라줘!`;
+            document.getElementById('modal-desc').innerHTML = `지난 1년 동안 ${babyName}를(을) 건강하게 키워낸<br>부모님의 노고에 진심으로 박수를 보냅니다.<br>${babyName}야! 앞으로도 아프지 않고 튼튼하게 자라줘!`;
         }
 
         function getAgeData(days) {
@@ -826,8 +866,12 @@
             // 데이터 렌더링
             const currentData = getAgeData(diffDays);
 
-            document.getElementById('avg-weight').innerText = currentData.weight + (currentData.weight.includes('+') ? "" : " kg");
-            document.getElementById('avg-height').innerText = currentData.height + (currentData.height.includes('+') ? "" : " cm");
+            // [성별 맞춤] 체중, 신장 표출
+            const wVal = currentData.weight[babyGender];
+            const hVal = currentData.height[babyGender];
+            document.getElementById('avg-weight').innerText = wVal + (wVal.includes('+') ? "" : " kg");
+            document.getElementById('avg-height').innerText = hVal + (hVal.includes('+') ? "" : " cm");
+            
             document.getElementById('growth-tip').innerHTML = currentData.growthTip;
 
             document.getElementById('feed-amount').innerText = currentData.feedAmount + (currentData.feedAmount.includes('회') ? "" : " ml");
